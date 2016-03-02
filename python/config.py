@@ -78,7 +78,7 @@ class Config(object):
         systemId = ""
         try:
             print "Reading configuration"
-            fd = os.open( "system.conf", os.O_RDONLY)
+            fd = os.open( "system.json", os.O_RDONLY)
             jsonString = ""
             while True:
                 data = os.read(fd, 2048)
@@ -100,7 +100,7 @@ class Config(object):
             self.json['Config']['Modules'] = {}
             self.json['Config']['Modules']['Module'] = []
 
-            fd = os.open( "system.conf", os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
+            fd = os.open( "system.json", os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
             os.write(fd, json.dumps(self.json, indent=1, sort_keys=True))
             os.close(fd)
 
