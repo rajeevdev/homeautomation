@@ -1,0 +1,37 @@
+{
+ "Config": {
+  "Modules": {
+   "Module": [
+    {
+     "ModuleId": "11-11-11-11-11-11", 
+     "Status": "0", 
+     "Switch": [
+      {
+       "Status": "1", 
+       "SwitchId": "relay1"
+      }, 
+      {
+       "Status": "1", 
+       "SwitchId": "relay2"
+      }
+     ]
+    }, 
+    {
+     "ModuleId": "22-22-22-22-22-22", 
+     "Status": "0", 
+     "Switch": [
+      {
+       "Status": "1", 
+       "SwitchId": "relay1"
+      }, 
+      {
+       "Status": "1", 
+       "SwitchId": "relay2"
+      }
+     ]
+    }
+   ]
+  }, 
+  "SystemId": "eb409d70-e03f-11e5-8387-80000b819f1a"
+ }
+}
