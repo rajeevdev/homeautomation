@@ -37,7 +37,8 @@ class API extends REST
 					return;
 				}
 			}
-			if ($func == "get_status")
+			if ($func == "get_status" ||
+				$func == "getSystemStatus" )
 			{
 				// Cross validation if the request method is GET else it will return "Not Acceptable" status
 				if($this->get_request_method() != "GET")
@@ -163,6 +164,35 @@ class API extends REST
 
 		// If invalid inputs "Bad Request" status message and reason
 		$this->response('', 400);		
+	}
+	
+    private function endsWith( $str, $sub )
+    {
+        return ( substr( $str, strlen( $str ) - strlen( $sub ) ) === $sub );
+    }
+	private function getSystemStatus()
+	{
+        $host    = "127.0.0.1";
+        $port    = 9999;
+        $message = "{\"command\": \"getStatus\"}\r\n";
+        $socket = socket_create(AF_INET, SOCK_STREAM, 0) or die("Could not create socket\n");
+        socket_connect($socket, $host, $port) or die("Could not connect to server\n");  
+        socket_write($socket, $message, strlen($message)) or die("Could not send data to server\n");
+        $result = '';
+        while (endsWith("\r\n") == false)
+        {
+            $result += socket_read ($socket, 1024) or die("Could not read server response\n");
+        }
+        
+        #echo "Reply From Server  :".$result;
+        // close socket
+        socket_close($socket);    
+        $this->response($result, 200);
+        
+        /*$myfile = fopen("../config/system.json", "r") or die("Unable to open file!");
+        $config = fread($myfile, filesize("../config/system.json"));
+        fclose($myfile);
+        $this->response($config, 200);*/
 	}
 	
 	private function get_status()

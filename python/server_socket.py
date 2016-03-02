@@ -66,7 +66,7 @@ class ClientThread(threading.Thread):
             self.gpio2State = gpio2Reply.replace("]", "")
             config.updateSwitch(self.moduleId, "relay2", self.gpio0State)
 
-            logger.info(config.getString())
+            logger.info(config.getFormattedString())
             start = time.time()
             
             while True:
@@ -101,7 +101,7 @@ class ClientThread(threading.Thread):
         self.server.removeThread(self.id)
         config.updateModule(self.moduleId, "0");
         logger.info("Client disconnected...")
-        logger.info(config.getString())
+        logger.info(config.getFormattedString())
 
 class Server(threading.Thread):
     def __init__(self, host, port):

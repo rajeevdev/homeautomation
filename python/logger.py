@@ -17,10 +17,10 @@ class MyLogger(object):
 
 def setupLogger():
     # Deafults
-    if (os.name == "nt"):
-        LOG_FILENAME = "./logging/deviceserver.log"
-    else:
-        LOG_FILENAME = "/tmp/deviceserver.log"
+    #if (os.name == "nt"):
+    LOG_FILENAME = "../logging/deviceserver.log"
+    #else:
+    #    LOG_FILENAME = "/tmp/deviceserver.log"
 
     if not os.path.exists(os.path.dirname(LOG_FILENAME)):
         try:

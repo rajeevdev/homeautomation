@@ -8,10 +8,40 @@
 <script src="jquery-2.1.3.min.js"></script>
 <script>
 $(document).ready(function() {
-    $("body").append("<p>This is a test</p>");
+
+/*
+	jQuery.ajax({
+    type: "POST",
+    url: 'api.php?getStatus',
+    dataType: 'json',
+    data: {functionname: 'add', arguments: [1, 2]},
+
+    success: function (obj, textstatus) {
+                  if( !('error' in obj) ) {
+                      yourVariable = obj.result;
+                  }
+                  else {
+                      console.log(obj.error);
+                  }
+            }
+	});
+*/
+	/*setInterval(function() {
+		$("body").append("<p>This is a test</p>");
+	}, 3000);*/
 });
 </script>
 </head>
 <body>
+<form>
+	<div>
+		Email:<br>
+		<input type="text" name="username"><br>
+		password:<br>
+		<input type="password" name="psw">
+		<br><br>
+		<button type="button">Submit</button>
+	</div>
+</form>
 </body>
 </html>

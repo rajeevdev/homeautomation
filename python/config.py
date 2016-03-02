@@ -72,13 +72,14 @@ import os
 import sys
 import requests
 
+CONFIG_FILE = "../config/system.json"
 class Config(object):
     instance = None
     def __init__(self):
         systemId = ""
         try:
             print "Reading configuration"
-            fd = os.open( "system.json", os.O_RDONLY)
+            fd = os.open( CONFIG_FILE, os.O_RDONLY)
             jsonString = ""
             while True:
                 data = os.read(fd, 2048)
@@ -100,7 +101,7 @@ class Config(object):
             self.json['Config']['Modules'] = {}
             self.json['Config']['Modules']['Module'] = []
 
-            fd = os.open( "system.json", os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
+            fd = os.open( CONFIG_FILE, os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
             os.write(fd, json.dumps(self.json, indent=1, sort_keys=True))
             os.close(fd)
 
@@ -119,9 +120,15 @@ def getJson():
 
 def getString():
     getInstance().lock.acquire()
-    js = getInstance().json
+    jsonObject = getInstance().json
     getInstance().lock.release()
-    return json.dumps(js, indent=1, sort_keys=True)
+    return json.dumps(jsonObject)
+    
+def getFormattedString():
+    getInstance().lock.acquire()
+    jsonObject = getInstance().json
+    getInstance().lock.release()
+    return json.dumps(jsonObject, indent=1, sort_keys=True)
     
 def updateModule(moduleId, status):
     getInstance().lock.acquire()
@@ -129,12 +136,13 @@ def updateModule(moduleId, status):
         # Check if module with moduleId exists
         for module in getInstance().json['Config']['Modules']['Module']:
             if module['ModuleId'] == moduleId:
+                print "update for " + moduleId
                 module['Status'] = status
                 break
     except:
         print("Error in updating config")
 
-    fd = os.open( "system.json", os.O_WRONLY | os.O_TRUNC)
+    fd = os.open( CONFIG_FILE, os.O_WRONLY | os.O_TRUNC)
     os.write(fd, json.dumps(getInstance().json, indent=1, sort_keys=True))
     os.close(fd)
     #updateStatus();
@@ -146,8 +154,10 @@ def updateSwitch(moduleId, switchId, status):
         # Check if module with moduleId exists
         moduleFound = False
         for module in getInstance().json['Config']['Modules']['Module']:
-            module['Status'] = "1"
             if module['ModuleId'] == moduleId:
+                moduleFound = True
+                module['Status'] = "1"
+                
                 switchFound = False
                 # Check if switch with switchId exists
                 for switch in module['Switch']:
@@ -158,7 +168,6 @@ def updateSwitch(moduleId, switchId, status):
                 if (not switchFound):
                     module['Switch'].append({'SwitchId': switchId, 'Status': status})
 
-                moduleFound = True
                 break
 
         # if not then create it
@@ -168,7 +177,7 @@ def updateSwitch(moduleId, switchId, status):
     except:
         print("Error in updating config")
 
-    fd = os.open( "system.json", os.O_WRONLY | os.O_TRUNC)
+    fd = os.open( CONFIG_FILE, os.O_WRONLY | os.O_TRUNC)
     os.write(fd, json.dumps(getInstance().json, indent=1, sort_keys=True))
     os.close(fd)
     #updateStatus();

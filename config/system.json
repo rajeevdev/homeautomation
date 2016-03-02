@@ -29,6 +29,20 @@
        "SwitchId": "relay2"
       }
      ]
+    }, 
+    {
+     "ModuleId": "00-00-00-00-00-00", 
+     "Status": "1", 
+     "Switch": [
+      {
+       "Status": "1", 
+       "SwitchId": "relay1"
+      }, 
+      {
+       "Status": "1", 
+       "SwitchId": "relay2"
+      }
+     ]
     }
    ]
   }, 

@@ -31,6 +31,7 @@
 import logger
 import config
 import server_socket
+import api_socket
 import get_command
 import json;
 
@@ -61,12 +62,12 @@ import json;
 #if m in j['Config']['Modules']
 #    print m
 #exit();
-
+  
 logger.setupLogger();
 logger.info("========== DEVICE SERVER STARTED ==========")
 
 # Dummy call to initialize the config object
-logger.info("Starting server with configuration:\n" + config.getString())
+logger.info("Starting server with configuration:\n" + config.getFormattedString())
 
 #print config.getString()
 #config.updateModule("11-11-11-11-11-11", "relay1", "1")
@@ -83,15 +84,20 @@ logger.info("Starting server with configuration:\n" + config.getString())
 #exit();
 
 
-print "Staring server thread\n"
+print "Staring Device Server\n"
 server = server_socket.Server("0.0.0.0", 9000)
 server.start();
-print "Server thread started\n"
+print "Device Server started\n"
 
-print "Staring command handler thread\n"
-commandHandler = get_command.GetCommand(server)
+print "Staring API Server\n"
+api_server = api_socket.APIServer("0.0.0.0", 9999)
+api_server.start();
+print "API server Started\n"
+
+#print "Starting command handler thread\n"
+#commandHandler = get_command.GetCommand(server)
 #commandHandler.start();
-print "Command handler thread started\n"
+#print "Command handler thread started\n"
 
 # switch_states = [
                     # {"switch_id":"0","status":"1"},
