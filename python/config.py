@@ -1,61 +1,61 @@
-#<Config>
-#   <SystemId>1234567890</SystemId>
-#   <Modules>
-#      <Module>
-#         <ModuleId>11-22-33-44-55-66</ModuleId>
-#         <Switch>
-#            <SwitchId>gpio0</SwitchId>
-#            <Status>0</Status>
-#         </Switch>
-#         <Switch>
-#            <SwitchId>gpio2</SwitchId>
-#            <Status>0</Status>
-#         </Switch>
-#      </Module>
-#      <Module>
-#         <ModuleId>11-22-33-44-55-77</ModuleId>
-#         <Switch>
-#            <SwitchId>gpio0</SwitchId>
-#            <Status>0</Status>
-#         </Switch>
-#         <Switch>
-#            <SwitchId>gpio2</SwitchId>
-#            <Status>0</Status>
-#         </Switch>
-#      </Module>
-#   </Modules>
-#</Config>
+#<config>
+#   <system_id>1234567890</system_id>
+#   <modules>
+#      <module>
+#         <module_id>11-22-33-44-55-66</module_id>
+#         <switch>
+#            <switch_id>gpio0</switch_id>
+#            <status>0</status>
+#         </switch>
+#         <switch>
+#            <switch_id>gpio2</switch_id>
+#            <status>0</status>
+#         </switch>
+#      </module>
+#      <module>
+#         <module_id>11-22-33-44-55-77</module_id>
+#         <switch>
+#            <switch_id>gpio0</switch_id>
+#            <status>0</status>
+#         </switch>
+#         <switch>
+#            <switch_id>gpio2</switch_id>
+#            <status>0</status>
+#         </switch>
+#      </module>
+#   </modules>
+#</config>
 
 #{
-#    "Config": {
-#        "SystemId": "1234567890",
-#        "Modules": {
-#            "Module": [
+#    "config": {
+#        "system_id": "1234567890",
+#        "modules": {
+#            "module": [
 #                {
-#                    "ModuleId": "11-22-33-44-55-66",
-#                    "Status": "1",
-#                    "Switch": [
+#                    "module_id": "11-22-33-44-55-66",
+#                    "status": "1",
+#                    "switch": [
 #                        {
-#                            "SwitchId": "gpio0",
-#                            "Status": "0"
+#                            "switch_id": "gpio0",
+#                            "status": "0"
 #                        },
 #                        {
-#                            "SwitchId": "gpio2",
-#                            "Status": "0"
+#                            "switch_id": "gpio2",
+#                            "status": "0"
 #                        }
 #                    ]
 #                },
 #                {
-#                    "ModuleId": "11-22-33-44-55-77",
-#                    "Status": "1",
-#                    "Switch": [
+#                    "module_id": "11-22-33-44-55-77",
+#                    "status": "1",
+#                    "switch": [
 #                        {
-#                            "SwitchId": "gpio0",
-#                            "Status": "0"
+#                            "switch_id": "gpio0",
+#                            "status": "0"
 #                        },
 #                        {
-#                            "SwitchId": "gpio2",
-#                            "Status": "0"
+#                            "switch_id": "gpio2",
+#                            "status": "0"
 #                        }
 #                    ]
 #                }
@@ -98,16 +98,16 @@ class Config(object):
             self.json = json.loads(jsonString)
             
             # Reset status to "0" for all module
-            for module in self.json['Config']['Modules']['Module']:
-                module['Status'] = "0"
+            for module in self.json['config']['modules']['module']:
+                module['status'] = "0"
 
         except:
             systemId = str(uuid.uuid1())
             self.json = {}
-            self.json['Config'] = {}
-            self.json['Config']['SystemId'] = systemId
-            self.json['Config']['Modules'] = {}
-            self.json['Config']['Modules']['Module'] = []
+            self.json['config'] = {}
+            self.json['config']['system_id'] = systemId
+            self.json['config']['modules'] = {}
+            self.json['config']['modules']['module'] = []
 
             fd = os.open( CONFIG_FILE, os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
             os.write(fd, json.dumps(self.json, indent=1, sort_keys=True))
@@ -142,10 +142,10 @@ def updateModule(moduleId, status):
     getInstance().lock.acquire()
     try:
         # Check if module with moduleId exists
-        for module in getInstance().json['Config']['Modules']['Module']:
-            if module['ModuleId'] == moduleId:
+        for module in getInstance().json['config']['modules']['module']:
+            if module['module_id'] == moduleId:
                 print "update for " + moduleId
-                module['Status'] = status
+                module['status'] = status
                 break
     except:
         print("Error in updating config")
@@ -158,16 +158,16 @@ def updateModule(moduleId, status):
 
 def getModuleById(moduleId):
     getInstance().lock.acquire()
-    reply = "{}"
+    reply = {}
     try:
         # Check if module with moduleId exists
         #moduleFound = False
         #print moduleId
-        for module in getInstance().json['Config']['Modules']['Module']:
-            if module['ModuleId'] == moduleId:
+        for module in getInstance().json['config']['modules']['module']:
+            if module['module_id'] == moduleId:
                 #print 'Found'
                 #print module
-                reply = json.dumps(module)
+                reply = module
                 break
     except:
         print("Error in updating config")
@@ -180,27 +180,27 @@ def updateSwitch(moduleId, switchId, status):
     try:
         # Check if module with moduleId exists
         moduleFound = False
-        for module in getInstance().json['Config']['Modules']['Module']:
-            if module['ModuleId'] == moduleId:
+        for module in getInstance().json['config']['modules']['module']:
+            if module['module_id'] == moduleId:
                 moduleFound = True
-                module['Status'] = "1"
+                module['status'] = "1"
                 
                 switchFound = False
                 # Check if switch with switchId exists
-                for switch in module['Switch']:
-                    if switch['SwitchId'] == switchId:
-                        switch['Status'] = status
+                for switch in module['switch']:
+                    if switch['switch_id'] == switchId:
+                        switch['status'] = status
                         switchFound = True
 
                 if (not switchFound):
-                    module['Switch'].append({'SwitchId': switchId, 'Status': status})
+                    module['switch'].append({'switch_id': switchId, 'status': status})
 
                 break
 
         # if not then create it
         if (not moduleFound):
-            getInstance().json['Config']['Modules']['Module'].append({'ModuleId': moduleId, "Status": "1", 'Switch': []})
-            getInstance().json['Config']['Modules']['Module'][-1]['Switch'].append({'SwitchId': switchId, 'Status': status})            
+            getInstance().json['config']['modules']['module'].append({'module_id': moduleId, "status": "1", 'switch': []})
+            getInstance().json['config']['modules']['module'][-1]['switch'].append({'switch_id': switchId, 'status': status})            
     except:
         print("Error in updating config")
 

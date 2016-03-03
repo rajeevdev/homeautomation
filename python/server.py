@@ -90,9 +90,9 @@ server.start();
 print "Device Server started\n"
 
 print "Staring API Server\n"
-api_server = api_server.APIServer()
-api_server.start();
-print "API server Started\n"
+api_server.start()
+#api_server.start();
+print "API server stopped\n"
 
 #print "Starting command handler thread\n"
 #commandHandler = get_command.GetCommand(server)
