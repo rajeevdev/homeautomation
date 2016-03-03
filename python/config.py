@@ -76,6 +76,14 @@ CONFIG_FILE = "../config/system.json"
 class Config(object):
     instance = None
     def __init__(self):
+    
+        if not os.path.exists(os.path.dirname(CONFIG_FILE)):
+            try:
+                os.makedirs(os.path.dirname(CONFIG_FILE))
+            except OSError as exc: # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
+    
         systemId = ""
         try:
             print "Reading configuration"
@@ -147,7 +155,26 @@ def updateModule(moduleId, status):
     os.close(fd)
     #updateStatus();
     getInstance().lock.release()
-    
+
+def getModuleById(moduleId):
+    getInstance().lock.acquire()
+    reply = "{}"
+    try:
+        # Check if module with moduleId exists
+        #moduleFound = False
+        #print moduleId
+        for module in getInstance().json['Config']['Modules']['Module']:
+            if module['ModuleId'] == moduleId:
+                #print 'Found'
+                #print module
+                reply = json.dumps(module)
+                break
+    except:
+        print("Error in updating config")
+    getInstance().lock.release()
+    #print 'Not Found'
+    return reply
+
 def updateSwitch(moduleId, switchId, status):
     getInstance().lock.acquire()
     try:

@@ -31,9 +31,9 @@
 import logger
 import config
 import server_socket
-import api_socket
-import get_command
-import json;
+import api_server
+#import get_command
+#import json;
 
 #import set_status
 #import requests
@@ -90,7 +90,7 @@ server.start();
 print "Device Server started\n"
 
 print "Staring API Server\n"
-api_server = api_socket.APIServer("0.0.0.0", 9999)
+api_server = api_server.APIServer()
 api_server.start();
 print "API server Started\n"
 
