@@ -161,20 +161,32 @@ def getModuleById(moduleId):
     reply = {}
     try:
         # Check if module with moduleId exists
-        #moduleFound = False
-        #print moduleId
         for module in getInstance().json['config']['modules']['module']:
             if module['module_id'] == moduleId:
-                #print 'Found'
-                #print module
                 reply = module
                 break
     except:
-        print("Error in updating config")
+        print("Error in getting module")
     getInstance().lock.release()
-    #print 'Not Found'
     return reply
 
+def getSwitchById(moduleId, switchId):
+    getInstance().lock.acquire()
+    reply = {}
+    try:
+        # Check if module with moduleId exists
+        for module in getInstance().json['config']['modules']['module']:
+            if module['module_id'] == moduleId:
+                for switch in module['switch']:
+                    if switch['switch_id'] == switchId:
+                        reply = switch
+                        break
+                break
+    except:
+        print("Error in getting switch")
+    getInstance().lock.release()
+    return reply
+    
 def updateSwitch(moduleId, switchId, status):
     getInstance().lock.acquire()
     try:
