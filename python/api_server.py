@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 import config
 
 app = Flask(__name__)
+server = None
 
 @app.route('/config', methods=['GET'])
 def get_config():
@@ -11,7 +12,7 @@ def get_config():
 def process_module():
     module_id = request.args.get('module_id', '')
     if (not module_id):
-        return jsonify({"error", "module_id missing"})
+        return jsonify({"error":"module_id missing"})
     return jsonify(config.getModuleById(module_id))
     
 @app.route('/switch', methods=['GET', 'POST'])
@@ -19,17 +20,26 @@ def process_switch():
     module_id = request.args.get('module_id', '')
     switch_id = request.args.get('switch_id', '')
     
-    if (not module_id or not switch_id):
-        return jsonify({"error", "module_id or switch_id missing"})
-    
+    if (not module_id):
+        return jsonify({"error":"module_id missing"})
+    if (not switch_id):
+        return jsonify({"error":"switch_id missing"})
+     
+    if request.method == 'GET':
+        return jsonify(config.getSwitchById(module_id, switch_id))
+
     if request.method == 'POST':
         jsonData = request.get_json()
         status = jsonData['status']
         if (not status):
-            return jsonify({"error", "status missing"})
-        config.updateSwitch(module_id, switch_id, status)
-        
-    return jsonify(config.getSwitchById(module_id, switch_id))
+            return jsonify({"error":"status missing"})
 
-def start():    
-    app.run(host="0.0.0.0", port=int("8080"))
+        #print server
+        server.setSwitchState(module_id, switch_id, status)
+        return jsonify({"error":"success"})
+        #config.updateSwitch(module_id, switch_id, status)
+        
+    return jsonify({"error":"unknown request"})
+    
+def start():
+    app.run(host="0.0.0.0", port=int("8080"),use_reloader=False)

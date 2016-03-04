@@ -1,51 +1,37 @@
 {
- "Config": {
-  "Modules": {
-   "Module": [
+ "config": {
+  "modules": {
+   "module": [
     {
-     "ModuleId": "11-11-11-11-11-11", 
-     "Status": "0", 
-     "Switch": [
+     "module_id": "11-11-11-11-11-11", 
+     "status": "0", 
+     "switch": [
       {
-       "Status": "1", 
-       "SwitchId": "relay1"
+       "status": "1", 
+       "switch_id": "relay1"
       }, 
       {
-       "Status": "1", 
-       "SwitchId": "relay2"
+       "status": "1", 
+       "switch_id": "relay2"
       }
      ]
     }, 
     {
-     "ModuleId": "22-22-22-22-22-22", 
-     "Status": "0", 
-     "Switch": [
+     "module_id": "22-22-22-22-22-22", 
+     "status": "0", 
+     "switch": [
       {
-       "Status": "1", 
-       "SwitchId": "relay1"
+       "status": "1", 
+       "switch_id": "relay1"
       }, 
       {
-       "Status": "1", 
-       "SwitchId": "relay2"
-      }
-     ]
-    }, 
-    {
-     "ModuleId": "00-00-00-00-00-00", 
-     "Status": "1", 
-     "Switch": [
-      {
-       "Status": "1", 
-       "SwitchId": "relay1"
-      }, 
-      {
-       "Status": "1", 
-       "SwitchId": "relay2"
+       "status": "1", 
+       "switch_id": "relay2"
       }
      ]
     }
    ]
   }, 
-  "SystemId": "eb409d70-e03f-11e5-8387-80000b819f1a"
+  "system_id": "eb409d70-e03f-11e5-8387-80000b819f1a"
  }
 }

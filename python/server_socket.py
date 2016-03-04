@@ -6,6 +6,29 @@ import json
 import logger
 import config
 
+# COMMANDS:
+# ---------
+# [GET /moduleId]
+# [/moduleId/48-2C-6A-1E-59-3D]
+#
+# [GET /gpio0]
+# [/gpio0/0]
+#
+# [GET /gpio2]
+# [/gpio2/0]
+#
+# [SET /gpio0/1]
+# [OK]
+#
+# [SET /gpio0/0]
+# [OK]
+#
+# [SET /gpio2/1]
+# [OK]
+#
+# [SET /gpio2/0]
+# [OK]
+
 class ClientThread(threading.Thread):
     def __init__(self, server, id, ip, port, socket):
         threading.Thread.__init__(self)
@@ -16,6 +39,7 @@ class ClientThread(threading.Thread):
         self.socket = socket
         self.moduleId = ""
         self.writeBuffer = ""
+        self.writeLock = threading.Lock()
         logger.info("Creating thread with ID '" + str(id) + "' for " + ip + ":" + str(port))
 
     def read(self, timeout = 10):
@@ -42,6 +66,17 @@ class ClientThread(threading.Thread):
                 raise;
 
         return packet;
+    
+    def getModuleId(self):
+        return self.moduleId;
+
+    def setSwitchState(self, switchId, status):
+        self.writeLock.acquire();
+        if (switchId == "relay1"):
+            self.writeBuffer = "[SET /gpio0/" + status + "]"
+        elif (switchId == "relay2"):
+            self.writeBuffer = "[SET /gpio2/" + status + "]"
+        self.writeLock.release();
         
     def run(self):
         try:
@@ -70,9 +105,13 @@ class ClientThread(threading.Thread):
             start = time.time()
             
             while True:
-                if self.writeBuffer:
-                    logger.info("Sending command: " + self.writeBuffer)
-                    self.socket.send(self.writeBuffer)
+                self.writeLock.acquire();
+                currentCommand = self.writeBuffer;
+                self.writeBuffer = "";
+                self.writeLock.release();
+                if currentCommand:
+                    logger.info("Sending command: " + currentCommand)
+                    self.socket.send(currentCommand)
                     status = self.read();
                     if (status == "[OK]"):
                         logger.info("State changed successfully")
@@ -105,6 +144,7 @@ class ClientThread(threading.Thread):
 
 class Server(threading.Thread):
     def __init__(self, host, port):
+        print "******************* Server object created"
         threading.Thread.__init__(self)
         self.host = host
         self.port = port
@@ -112,9 +152,13 @@ class Server(threading.Thread):
         self.idCounter = 1
         self.dictLock = threading.Lock()
         
-    def executeCommand(self, moduleId):
-        #for key, value in self.threadDict.iteritems():
-        print "test"
+    def setSwitchState(self, moduleId, switchId, status):
+        self.dictLock.acquire();
+        for id, thread in self.threadDict.iteritems():
+            if (thread.getModuleId() == moduleId):
+                thread.setSwitchState(switchId, status)
+                break
+        self.dictLock.release();
 
     def removeThread(self, id):
         self.dictLock.acquire();

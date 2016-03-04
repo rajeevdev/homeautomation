@@ -90,6 +90,7 @@ server.start();
 print "Device Server started\n"
 
 print "Staring API Server\n"
+api_server.server = server
 api_server.start()
 #api_server.start();
 print "API server stopped\n"
