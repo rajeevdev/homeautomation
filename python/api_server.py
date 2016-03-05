@@ -30,6 +30,9 @@ def process_switch():
 
     if request.method == 'POST':
         jsonData = request.get_json()
+        if (not jsonData):
+            return jsonify({"error":"No content in request"})
+
         status = jsonData['status']
         if (not status):
             return jsonify({"error":"status missing"})

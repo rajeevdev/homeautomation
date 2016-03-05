@@ -56,11 +56,14 @@ class ClientThread(threading.Thread):
                     endIndex = data.find("]");
                     if (startIndex >= 0 and endIndex >= 0):
                         packet = data[startIndex:endIndex+1]
-                        data = data[endIndex+1:]
+                        data = ""
+                        #data = data[endIndex+1:]
                         logger.info("Received packet : " + packet)
+                        
                         break;
                 if (time.time() - start) > timeout:
                     logger.error("Complete packet not received: " + data)
+                    data = ""
                     break
             except:
                 raise;
@@ -86,6 +89,7 @@ class ClientThread(threading.Thread):
             moduleIdReply = self.read();
             moduleIdReply = moduleIdReply.replace("[/moduleId/", "")
             self.moduleId = moduleIdReply.replace("]", "")
+            time.sleep(1)
             
             logger.info("Receiving gpio0 state")
             self.socket.send("[GET /gpio0]")
@@ -93,6 +97,7 @@ class ClientThread(threading.Thread):
             gpio0Reply = gpio0Reply.replace("[/gpio0/", "")
             self.gpio0State = gpio0Reply.replace("]", "")            
             config.updateSwitch(self.moduleId, "relay1", self.gpio0State)
+            time.sleep(1)
              
             logger.info("Receiving gpio2 state")
             self.socket.send("[GET /gpio2]")
@@ -100,8 +105,9 @@ class ClientThread(threading.Thread):
             gpio2Reply = gpio2Reply.replace("[/gpio2/", "")
             self.gpio2State = gpio2Reply.replace("]", "")
             config.updateSwitch(self.moduleId, "relay2", self.gpio0State)
+            time.sleep(1)
 
-            logger.info(config.getFormattedString())
+            #logger.info(config.getFormattedString())
             start = time.time()
             
             while True:
@@ -112,9 +118,15 @@ class ClientThread(threading.Thread):
                 if currentCommand:
                     logger.info("Sending command: " + currentCommand)
                     self.socket.send(currentCommand)
-                    status = self.read();
-                    if (status == "[OK]"):
-                        logger.info("State changed successfully")
+                    reply = self.read();
+                    if (reply.find("[/gpio0/") >= 0):
+                        gpio0Reply = reply.replace("[/gpio0/", "")
+                        self.gpio0State = gpio0Reply.replace("]", "")            
+                        config.updateSwitch(self.moduleId, "relay1", self.gpio0State)
+                    elif (reply.find("[/gpio0/") >= 0):
+                        gpio2Reply = gpio2Reply.replace("[/gpio2/", "")
+                        self.gpio2State = gpio2Reply.replace("]", "")
+                        config.updateSwitch(self.moduleId, "relay2", self.gpio2State)                        
                     else:
                         logger.error("Error changing state")
 
@@ -140,7 +152,7 @@ class ClientThread(threading.Thread):
         self.server.removeThread(self.id)
         config.updateModule(self.moduleId, "0");
         logger.info("Client disconnected...")
-        logger.info(config.getFormattedString())
+        #logger.info(config.getFormattedString())
 
 class Server(threading.Thread):
     def __init__(self, host, port):

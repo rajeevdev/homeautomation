@@ -6,9 +6,9 @@ import time
 import select
 
 class Client(object):
-    def __init__(self, moduleId = "00-00-00-00-00-00"):
+    def __init__(self, moduleId = "00:00:00:00:00:00"):
         self.connected = False
-        self.server_address = ('localhost', 9000)
+        self.server_address = ('192.168.42.13', 9000)
         self.gpio0 = "1";
         self.gpio2 = "1";
         self.moduleId = moduleId;
@@ -86,7 +86,7 @@ class Client(object):
          
             time.sleep(.5)
 
-moduleId = "00-00-00-00-00-00"
+moduleId = "00:00:00:00:00:00"
 if (len(sys.argv) > 1):
     moduleId = sys.argv[1]
 cl = Client(moduleId)

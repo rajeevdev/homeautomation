@@ -72,18 +72,21 @@ import os
 import sys
 import requests
 
-CONFIG_FILE = "../config/system.json"
+if (os.name == "nt"):
+    CONFIG_FILE = "../config/automation.json"
+else:
+    CONFIG_FILE = "/opt/automation/config/automation.json"
+
 class Config(object):
     instance = None
     def __init__(self):
-    
         if not os.path.exists(os.path.dirname(CONFIG_FILE)):
             try:
                 os.makedirs(os.path.dirname(CONFIG_FILE))
             except OSError as exc: # Guard against race condition
                 if exc.errno != errno.EEXIST:
                     raise
-    
+
         systemId = ""
         try:
             print "Reading configuration"

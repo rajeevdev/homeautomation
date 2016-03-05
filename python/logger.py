@@ -17,17 +17,16 @@ class MyLogger(object):
 
 def setupLogger():
     # Deafults
-    #if (os.name == "nt"):
-    LOG_FILENAME = "../logging/deviceserver.log"
-    #else:
-    #    LOG_FILENAME = "/tmp/deviceserver.log"
-
-    if not os.path.exists(os.path.dirname(LOG_FILENAME)):
-        try:
-            os.makedirs(os.path.dirname(LOG_FILENAME))
-        except OSError as exc: # Guard against race condition
-            if exc.errno != errno.EEXIST:
-                raise
+    if (os.name == "nt"):
+        LOG_FILENAME = "../logging/automation.log"
+        if not os.path.exists(os.path.dirname(LOG_FILENAME)):
+            try:
+                os.makedirs(os.path.dirname(LOG_FILENAME))
+            except OSError as exc: # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
+    else:
+        LOG_FILENAME = "/var/log/automation.log"
 
     LOG_LEVEL = logging.DEBUG  # Could be e.g. "DEBUG" or "WARNING"
 
