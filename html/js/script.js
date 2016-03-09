@@ -98,33 +98,43 @@ function searchProductList(json) {
     });
 }
 
-function AddModule(module_id, status, switchList) {
-    console.log(module_id);
-    console.log(status);
-    console.log(switchList);
+var counter = 1;
+function AddModule(module_id, module_status, switchList) {
+    //console.log(module_id);
+    //console.log(status);
+    //console.log(switchList);
     
-    var element = "<p>" + module_id + "</p>";
-    element += "<p>" + (status == "1" ? "Connected" : "Disconnected") + "</p>";
-    $("#resultArea").append(element);
+    var mId = module_id;
 
-    var element1 =
-        "<ul data-role='listview' data-inset='true' id='" + module_id + "'>";
-    
+    $("#resultArea").append("<ul data-role='listview' data-inset='true' id='" + mId + "'></ul>");
+    $("#" + mId).append("<li data-role='list-divider'><p><b>Module ID : </b><i>" + mId + "</i></p><p><b>Status : </b><i>" + (module_status == "1" ? "Connected" : "Disconnected") + "</i></p></li>");
     for (var i = 0; i < switchList.length; ++i) {
         var switchObj = switchList[i];
         console.log(switchObj.switch_id);
         console.log(switchObj.status);
-        element1 += "<li data-role='fieldcontain'>";
-        element1 += "<label for='test-slider'>" + switchObj.switch_id + "</label>";
-        element1 += "<select id='test-slider' data-role='slider' name='testslider'>";
-        element1 += "<option value='off'>off</option>";
-        element1 += "<option value='on'>on</option>";
-        element1 += "</select>";
-        element1 += "</li>";
+        
+        var sId = module_id + '_' + switchObj.switch_id;
+        //$("#" + module_id).append("<li data-icon='false'><a href='#'><img src='" + (switchObj.status == "1" ? "green.png" : "red.png") + "' class='ui-li-icon'>" + switchObj.switch_id + "</a></li>");
+
+        $("#" + mId).append("<li data-icon='false'><label for='" + sId + "'>" + switchObj.switch_id + "</label><select id='" + sId + "' data-role='slider'><option value='off'>off</option><option value='on'>on</option></select></li>");
+        $('#' + mId + ' #' + sId).slider();
+        if (module_status == "1") {
+            if (switchObj.status == "1")
+                $('#' + mId + ' #' + sId).off('change').val('on').slider("refresh");
+            else
+                $('#' + mId + ' #' + sId).off('change').val('off').slider("refresh");
+            
+            $('#' + mId + ' #' + sId).on('change', function(e) {
+                var id = this.id;
+                console.log(id);
+            });
+        } else {
+            $('#' + mId + ' #' + sId).slider('option', 'disabled', true);
+        }
     }
-    element1 += "</ul>";
-    $("#resultArea").append(element1);
-    $('#' + module_id).listview().listview('refresh');;
+    
+    $('#' + mId).listview().listview('refresh');
+    
 }
 
 $(document).ready(function() {
@@ -143,7 +153,7 @@ var data =
                   "switch_id": "relay1"
                 },
                 {
-                  "status": "1",
+                  "status": "0",
                   "switch_id": "relay2"
                 }
               ]
