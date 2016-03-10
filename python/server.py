@@ -1,33 +1,5 @@
 #!/usr/bin/env python
 
-# COMMANDS:
-# ---------
-# [GET /moduleId]
-# [/moduleId/48-2C-6A-1E-59-3D]
-#
-# [GET /gpio0]
-# [/gpio0/0]
-#
-# [GET /gpio2]
-# [/gpio2/0]
-#
-# [SET /gpio0/1]
-# [OK]
-#
-# [SET /gpio0/0]
-# [OK]
-#
-# [SET /gpio2/1]
-# [OK]
-#
-# [SET /gpio2/0]
-# [OK]
-
-#import requests
-#import json
-#import argparse
-#import time  # this is only being used as part of the example
-#import logger
 import logger
 import config
 import server_socket
@@ -84,16 +56,16 @@ logger.info("Starting server with configuration:\n" + config.getFormattedString(
 #exit();
 
 
-print "Staring Device Server\n"
+logger.info("Staring Device Server")
 server = server_socket.Server("0.0.0.0", 9000)
-server.start();
-print "Device Server started\n"
+server.start()
+logger.info("Device Server started")
 
-print "Staring API Server\n"
+logger.info("Staring API Server")
 api_server.server = server
 api_server.start()
 #api_server.start();
-print "API server stopped\n"
+logger.info("API server stopped")
 
 #print "Starting command handler thread\n"
 #commandHandler = get_command.GetCommand(server)

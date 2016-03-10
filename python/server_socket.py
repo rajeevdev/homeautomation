@@ -18,16 +18,16 @@ import config
 # [/gpio2/0]
 #
 # [SET /gpio0/1]
-# [OK]
+# [/gpio0/1]
 #
 # [SET /gpio0/0]
-# [OK]
+# [/gpio0/0]
 #
 # [SET /gpio2/1]
-# [OK]
+# [/gpio2/1]
 #
 # [SET /gpio2/0]
-# [OK]
+# [/gpio2/0]
 
 class ClientThread(threading.Thread):
     def __init__(self, server, id, ip, port, socket):
@@ -58,11 +58,11 @@ class ClientThread(threading.Thread):
                         packet = data[startIndex:endIndex+1]
                         data = ""
                         #data = data[endIndex+1:]
-                        logger.info("Received packet : " + packet)
+                        logger.debug("Received packet : " + packet)
                         
                         break;
                 if (time.time() - start) > timeout:
-                    logger.error("Complete packet not received: " + data)
+                    logger.debug("Complete packet not received: " + data)
                     data = ""
                     break
             except:
@@ -116,27 +116,22 @@ class ClientThread(threading.Thread):
                 self.writeBuffer = "";
                 self.writeLock.release();
                 if currentCommand:
-                    logger.info("Sending command: " + currentCommand)
+                    logger.debug("Sending command: " + currentCommand)
                     self.socket.send(currentCommand)
                     reply = self.read();
                     if (reply.find("[/gpio0/") >= 0):
                         gpio0Reply = reply.replace("[/gpio0/", "")
-                        self.gpio0State = gpio0Reply.replace("]", "")            
+                        self.gpio0State = gpio0Reply.replace("]", "")
                         config.updateSwitch(self.moduleId, "relay1", self.gpio0State)
-                    elif (reply.find("[/gpio0/") >= 0):
-                        gpio2Reply = gpio2Reply.replace("[/gpio2/", "")
+                    elif (reply.find("[/gpio2/") >= 0):
+                        gpio2Reply = reply.replace("[/gpio2/", "")
                         self.gpio2State = gpio2Reply.replace("]", "")
                         config.updateSwitch(self.moduleId, "relay2", self.gpio2State)                        
                     else:
                         logger.error("Error changing state")
-
-                #(readyRead, readyWrite, readyException) = select.select([self.socket], [], [], 5)
-                #print readyRead
-                #print readyWrite
-                #print readyException
                 
                 # Dummy read
-                if (time.time() - start) > 5:
+                if (time.time() - start) > 10:
                     logger.info("Checking connection status !!!")
                     self.socket.send("[GET /moduleId]")
                     moduleIdReply = self.read();
@@ -156,7 +151,7 @@ class ClientThread(threading.Thread):
 
 class Server(threading.Thread):
     def __init__(self, host, port):
-        print "******************* Server object created"
+        logger.info("Server object created")
         threading.Thread.__init__(self)
         self.host = host
         self.port = port

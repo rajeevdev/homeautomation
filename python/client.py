@@ -8,7 +8,7 @@ import select
 class Client(object):
     def __init__(self, moduleId = "00:00:00:00:00:00"):
         self.connected = False
-        self.server_address = ('192.168.42.13', 9000)
+        self.server_address = ('127.0.0.1', 9000)
         self.gpio0 = "1";
         self.gpio2 = "1";
         self.moduleId = moduleId;
@@ -38,7 +38,11 @@ class Client(object):
                 raise;
 
         return packet;
-        
+    
+    def write(self, data):
+        print "Data sent : " + data
+        self.socket.send(data)
+
     def loop(self):
         while True:
             try:
@@ -61,23 +65,25 @@ class Client(object):
                         command = self.read();
                         if (command == "[GET /moduleId]"):
                             time.sleep(.5)
-                            self.socket.send("[/moduleId/" + self.moduleId + "]")
+                            self.write("[/moduleId/" + self.moduleId + "]")
                         elif (command == "[GET /gpio0]"):
                             time.sleep(.5)
-                            self.socket.send("[/gpio0/" + self.gpio0 + "]")
+                            self.write("[/gpio0/" + self.gpio0 + "]")
                         elif (command == "[GET /gpio2]"):
                             time.sleep(.5)
-                            self.socket.send("[/gpio2/" + self.gpio2 + "]")
+                            self.write("[/gpio2/" + self.gpio2 + "]")
                         elif (command == "[SET /gpio0/0]" or command == "[SET /gpio0/1]"):
                             self.gpio0 = command.replace("[SET /gpio0/", "")
                             self.gpio0 = self.gpio0.replace("]", "")
                             time.sleep(.5)
-                            self.socket.send("[OK]")
+                            reply = command.replace("SET ", "")
+                            self.write(reply)
                         elif (command == "[SET /gpio2/0]" or command == "[SET /gpio2/1]"):
                             self.gpio2 = command.replace("[SET /gpio2/", "")
                             self.gpio2 = self.gpio2.replace("]", "")
                             time.sleep(.5)
-                            self.socket.send("[OK]")
+                            reply = command.replace("SET ", "")
+                            self.write(reply)
 
                 except:
                     self.socket.close()

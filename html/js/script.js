@@ -1,104 +1,42 @@
-var searchKey;
+var Config = null;
 
-var BASE_URL = "http://kartsearch.zz.mu";
-//var BASE_URL = "http://localhost";
-function getAllProductCategoryXML(xml) {
-	$("#resultArea").empty();
-	
-	var elements = xml.getElementsByTagName("get")
-	for (var i = 0; i < 5; ++i) {
-		var url = elements[i].textContent;
-		$("#resultArea").append("<div style='border: 1px solid grey;width:calc(100% - 4px);height:auto;'><a id='linkContainer' href='#'>" + url + "<a><div>");
-	}
-	
-	$("#linkContainer").click( function() {
-		
-		var param = $(this).text().replace("&", "??");
-		var url = "http://kartsearch.zz.mu/api.php?url=" + param;
-		$.get(url, getProductListXML, "xml");
-	});
+function SendCommand(module_id, switch_id, status) {
+    var host = window.location.host;
+    host = host.replace(":8080", "")
+    var url = "http://" + host + ":9999/switch?module_id=" + module_id + "&switch_id=" + switch_id + "&status=" + status;
+    //var dataToBeSent = '[{"status": "1"}]';
+    $.post(url, function(data, textStatus) {
+        console.log(data);
+        console.log(textStatus);
+        //console.log(module_id);
+        //data contains the JSON object
+        //textStatus contains the status: success, error, etc
+    }, "json");
+    
+    /*$.ajax({
+        type: 'POST',
+        url: url,
+        data: JSON.stringify(dataToBeSent),//'{"name":"jonas"}', // or JSON.stringify ({name: 'jonas'}),
+        success: function(data) { alert('data: ' + data); },
+        contentType: "application/json",
+        dataType: 'json'
+    });*/
 }
 
-function getAllProductCategoryJSON(json) {
-	$.each(json.apiGroups.affiliate.apiListings, function(i, v) {
-		var url = v.availableVariants["v0.1.0"].get;
-		var id = v.availableVariants["v0.1.0"].resourceName;
-		$("#resultArea").append("<div style='border: 1px solid grey;width:calc(100% - 4px);height:auto;'><a id='" + id + "' href='#'>" + url + "<a><div>");
-	});
-	
-	$("#resultArea a").click( function() {
-		
-		var param = $(this).text().replace("&", "@@@@@");
-		var url = "http://kartsearch.zz.mu/api.php?url=" + param;
-		$.get(url, getProductListJSON, "json");
-	});	
+function SwitchClicked(e) {
+    var id = this.id;
+    var value = this.value;
+    
+    var index = id.search("_");
+    var module_id = id.substring(0, index);
+    var switch_id = id.substring(index + 1, id.length);
+    var status = ((value == "on") ? "1" : "0");
+    console.log(module_id);
+    console.log(switch_id);
+    console.log(status);
+    SendCommand(module_id, switch_id, status);
 }
 
-function getProductListXML(xml) {
-	var xmlText = new XMLSerializer().serializeToString(xml);
-}
-
-function getProductListJSON(json) {
-	console.log(json);
-}
-
-function searchProduct() {
-	//searchKey = $("#searchKey").val();
-	//var url = "http://kartsearch.zz.mu/api.php?" + key;
-	
-	//var url = "http://kartsearch.zz.mu/api.php?url=https://affiliate-api.flipkart.net/affiliate/api/rajeevdev.xml";
-	//$.get(url, getAllProductCategoryXML, "xml");
-	
-	//var url = "http://kartsearch.zz.mu/api.php?url=https://affiliate-api.flipkart.net/affiliate/api/rajeevdev.json";
-	//$.get(url, getAllProductCategoryJSON, "json");
-	
-	var url = BASE_URL + "/flipkartapi.php?key=" + searchKey;
-	$.get(url, searchProductList, "json").fail(function() {
-		$.mobile.loading("hide");
-		$("body").removeClass('ui-disabled');	
-		$( "#errorPopup" ).popup( "open" );
-	});
-	
-	$('#search').blur();
-	$("body").addClass('ui-disabled');
-	$.mobile.loading( 'show', {
-		text: 'Searhing. Please wait...',
-		textVisible: true,
-		theme: 'z',
-		html: ""
-	});
-}
-
-function searchProductList(json) {
-
-	$("#item-container").empty();
-
-	$.each(json.productInfoList, function(i, v) {
-		var imageUrl = v.productBaseInfo.productAttributes.imageUrls["200x200"];
-		var productUrl = v.productBaseInfo.productAttributes.productUrl;
-		var price = v.productBaseInfo.productAttributes.sellingPrice["amount"];
-		var maximumPrice = v.productBaseInfo.productAttributes.maximumRetailPrice["amount"];
-		var title = v.productBaseInfo.productAttributes.title;
-
-		$("#item-container").append("<li class='ui-li-has-thumb ui-first-child' url='" + productUrl + "'><a href='#' class='ui-btn ui-btn-icon-right ui-icon-carat-r'>" +
-            	"<img src='" + imageUrl + "' class='ui-li-thumb'>" +
-				"<h2>" + title + "</h2>" +
-                "<p>MRP Rs. " + maximumPrice + "</p>" +
-				"<p>Offer Price Rs. " + price + "</p>" +
-				"</a></li>");
-	});
-	
-	$.mobile.loading("hide");
-	$("body").removeClass('ui-disabled');	
-	
-	$('#item-container li').click('click', function(e) {
-		e.preventDefault();
-		var targetURL = $(this).attr("url");
-		window.open(targetURL, "_system");
-    });
-}
-
-var counter = 1;
 function AddModule(module_id, module_status, switchList) {
     //console.log(module_id);
     //console.log(status);
@@ -110,8 +48,8 @@ function AddModule(module_id, module_status, switchList) {
     $("#" + mId).append("<li data-role='list-divider'><p><b>Module ID : </b><i>" + mId + "</i></p><p><b>Status : </b><i>" + (module_status == "1" ? "Connected" : "Disconnected") + "</i></p></li>");
     for (var i = 0; i < switchList.length; ++i) {
         var switchObj = switchList[i];
-        console.log(switchObj.switch_id);
-        console.log(switchObj.status);
+        //console.log(switchObj.switch_id);
+        //console.log(switchObj.status);
         
         var sId = module_id + '_' + switchObj.switch_id;
         //$("#" + module_id).append("<li data-icon='false'><a href='#'><img src='" + (switchObj.status == "1" ? "green.png" : "red.png") + "' class='ui-li-icon'>" + switchObj.switch_id + "</a></li>");
@@ -124,10 +62,10 @@ function AddModule(module_id, module_status, switchList) {
             else
                 $('#' + mId + ' #' + sId).off('change').val('off').slider("refresh");
             
-            $('#' + mId + ' #' + sId).on('change', function(e) {
+            $('#' + mId + ' #' + sId).on('change', SwitchClicked);/*function(e) {
                 var id = this.id;
                 console.log(id);
-            });
+            });*/
         } else {
             $('#' + mId + ' #' + sId).slider('option', 'disabled', true);
         }
@@ -137,7 +75,110 @@ function AddModule(module_id, module_status, switchList) {
     
 }
 
+function IsSwitchsEqual(newSwitches, oldSwitches) {
+    for (var i = 0; i < newSwitches.length; ++i) {
+        var newSwitchId = newSwitches[i].switch_id;
+        
+        var switchFound = false;
+        for (var j = 0; j < oldSwitches.length; ++j) {
+            var oldSwitchId = oldSwitches[j].switch_id;
+            if (oldSwitchId == newSwitchId) {
+                switchFound = true;
+                if (oldSwitchId[j].status != newSwitchId[i].status) {
+                    return false;
+                }
+                break;
+            }
+        }
+        
+        if (switchFound == false) {
+            return false;
+        }        
+    }
+    return true;
+}
+
+function IsConfigEqual(newModules) {
+    if (Config == null)
+        return false;
+
+    var oldModules = Config.modules.module;
+    for (var i = 0; i < newModules.length; ++i) {
+        var newModuleId = newModules[i].module_id;
+        
+        var moduleFound = false;
+        for (var j = 0; j < oldModules.length; ++j) {
+            var oldModuleId = oldModules[j].module_id;
+            
+            if (oldModuleId == newModuleId) {
+                moduleFound = true;
+                if (oldModules[j].status == newModules[i].status) {
+                    
+                    newSwitches = newModules[i].switch;
+                    oldSwitches = oldModules[j].switch;
+                    
+                    if (IsSwitchsEqual(newSwitches, oldSwitches) == false)
+                        return false;
+                        
+                } else {
+                    return false;
+                }
+                break;
+            }
+        }
+        
+        if (moduleFound == false) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+function ConfigReceived( data ) {
+
+    //console.log(jQuery.isEmptyObject(data.config.modules));
+    //console.log(filter(Config, data.config));
+    
+    //console.log(isEqual(Config, data.config));
+    //if (isEqual(Config, data.config)) {
+    //    return;
+    //}
+    
+    var modules = data.config.modules.module;
+    
+    if (IsConfigEqual(modules) == false) {
+        console.log("Config not equal");
+        $("#resultArea").empty();
+        for (var i = 0; i < modules.length; ++i) {
+            var module = modules[i];
+            AddModule(module.module_id, module.status, module.switch)
+        }
+    } else {
+        console.log("Config equal");
+    }
+    Config = data.config;
+}
+
+function ErrorReceivingConfig() {
+    $("#resultArea").empty();
+    Config = null;
+}
+
 $(document).ready(function() {
+
+    var host = window.location.host;
+    host = host.replace(":8080", "")
+    $.getJSON( "http://" + host + ":9999/config", ConfigReceived).error(ErrorReceivingConfig);
+
+    setInterval(function() {
+        var host = window.location.host;
+        host = host.replace(":8080", "")
+        $.getJSON( "http://" + host + ":9999/config", ConfigReceived).error(ErrorReceivingConfig);
+    }, 5000);
+
+
+/*
 
 var data =     
     {
@@ -185,70 +226,5 @@ var data =
         var module = data.config.modules.module[i];
         //console.log(data.config.modules.module[i]);
         AddModule(module.module_id, module.status, module.switch)
-    }
+    }*/
 });
-/*
-(function( $, window, undefined ) {
-	$.widget( "mobile.listview", $.mobile.listview, {
-		options: {
-			childPages: true,
-			page: "<div data-role='page'></div>",
-			header: "<div data-role='header'><a href='#' data-rel='back'>Back</a><h1></h1></div>",
-			content: "<div class='ui-content'></div>"
-		},
-		_create: function(){
-			this._super();
-			if( this.options.childPages ) {
-				this._setupChildren();
-			}
-		},
-		_setupChildren: function() {
-			this._attachBindings();
-			this.element.find( "ul" )
-				.css( "display","none" )
-				.parent()
-				.addClass("ui-btn ui-btn-icon-right ui-icon-carat-r");
-		},
-		_attachBindings: function() {
-			this._on({
-				"click": "_handleSubpageClick"
-			});
-			this._on( "body", {
-				"pagechange": function(){
-					if ( this.opening === true ) {
-						this.open = true;
-						this.opening = false;
-					} else if ( this.open === true ) {
-						this.newPage.remove();
-						this.open = false;
-					}
-				}
-			});
-		},
-		_handleSubpageClick: function( event ) {
-			if( $(event.target).closest( "li" ).children( "ul" ).length == 0 ) {
-				return;
-			}
-			this.opening = true;
-			this.newPage = $( this.options.page ).uniqueId();
-			this.nestedList  = $( event.target ).children( "ul" )
-				.clone().attr( "data-" + $.mobile.ns + "role", "listview" )
-				.css( "display", "block" );
-			this.pageName = (
-				$( event.target.childNodes[0] ).text().replace(/^\s+|\s+$/g, '').length > 0 )?
-				$( event.target.childNodes[0] ).text() : $( event.target.childNodes[1] ).text();
-			this.pageID = this.newPage.attr( "id" );
-
-			// Build new page
-			this.newPage.append(
-				$( this.options.header ).find( "h1" ).text( this.pageName ).end()
-			).append(
-				$( this.options.content )
-			).find( "div.ui-content" ).append( this.nestedList );
-
-			$( "body" ).append( this.newPage );
-
-			$( "body" ).pagecontainer( "change", "#" + this.pageID );
-		}
-	});
-})( jQuery, this );*/
