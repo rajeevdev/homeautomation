@@ -54,20 +54,20 @@ function AddModule(module_id, module_status, switchList) {
         var sId = module_id + '_' + switchObj.switch_id;
         //$("#" + module_id).append("<li data-icon='false'><a href='#'><img src='" + (switchObj.status == "1" ? "green.png" : "red.png") + "' class='ui-li-icon'>" + switchObj.switch_id + "</a></li>");
 
-        $("#" + mId).append("<li data-icon='false'><label for='" + sId + "'>" + switchObj.switch_id + "</label><select id='" + sId + "' data-role='slider'><option value='off'>off</option><option value='on'>on</option></select></li>");
-        $('#' + mId + ' #' + sId).slider();
+        $("#" + mId).append("<li data-icon='false'><label for='" + sId + "'>" + switchObj.switch_id + "</label><span class='ui-btn-right' style='margin-top:.25em;'><select id='" + sId + "' data-role='flipswitch'><option value='off'>off</option><option value='on'>on</option></select></span></li>");
+        $('#' + mId + ' #' + sId).flipswitch();
         if (module_status == "1") {
             if (switchObj.status == "1")
-                $('#' + mId + ' #' + sId).off('change').val('on').slider("refresh");
+                $('#' + mId + ' #' + sId).off('change').val('on').flipswitch("refresh");
             else
-                $('#' + mId + ' #' + sId).off('change').val('off').slider("refresh");
+                $('#' + mId + ' #' + sId).off('change').val('off').flipswitch("refresh");
             
             $('#' + mId + ' #' + sId).on('change', SwitchClicked);/*function(e) {
                 var id = this.id;
                 console.log(id);
             });*/
         } else {
-            $('#' + mId + ' #' + sId).slider('option', 'disabled', true);
+            $('#' + mId + ' #' + sId).flipswitch('option', 'disabled', true);
         }
     }
     
@@ -144,6 +144,7 @@ function ConfigReceived( data ) {
     //if (isEqual(Config, data.config)) {
     //    return;
     //}
+    $.mobile.loading("hide");
     
     var modules = data.config.modules.module;
     
@@ -167,6 +168,7 @@ function ErrorReceivingConfig() {
 
 $(document).ready(function() {
 
+    $.mobile.loading("show");
     var host = window.location.host;
     host = host.replace(":8080", "")
     $.getJSON( "http://" + host + ":9999/config", ConfigReceived).error(ErrorReceivingConfig);
