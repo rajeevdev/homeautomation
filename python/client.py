@@ -8,7 +8,8 @@ import select
 class Client(object):
     def __init__(self, moduleId = "00:00:00:00:00:00"):
         self.connected = False
-        self.server_address = ('192.168.42.1', 9000)
+        #self.server_address = ('192.168.42.1', 9000)
+        self.server_address = ('127.0.0.1', 9000)
         self.gpio0 = "1";
         self.gpio2 = "1";
         self.moduleId = moduleId;

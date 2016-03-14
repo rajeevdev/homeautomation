@@ -39,6 +39,7 @@ class ClientThread(threading.Thread):
         self.socket = socket
         self.moduleId = ""
         self.writeBuffer = ""
+        self.event = None
         self.writeLock = threading.Lock()
         logger.info("Creating thread with ID '" + str(id) + "' for " + ip + ":" + str(port))
 
@@ -74,12 +75,21 @@ class ClientThread(threading.Thread):
         return self.moduleId;
 
     def setSwitchState(self, switchId, status):
+        if (status == "0"):
+            status = "1"
+        else:
+            status = "0"
+
+        self.event = threading.Event()
+        logger.debug("Appending new command in thread")
         self.writeLock.acquire();
         if (switchId == "relay1"):
             self.writeBuffer = "[SET /gpio0/" + status + "]"
         elif (switchId == "relay2"):
             self.writeBuffer = "[SET /gpio2/" + status + "]"
         self.writeLock.release();
+        self.event.wait()
+        logger.debug("Command processing complete")
         
     def run(self):
         try:
@@ -89,6 +99,7 @@ class ClientThread(threading.Thread):
             moduleIdReply = self.read();
             moduleIdReply = moduleIdReply.replace("[/moduleId/", "")
             self.moduleId = moduleIdReply.replace("]", "")
+            self.moduleId = self.moduleId.replace(":", "-")
             time.sleep(1)
             
             logger.info("Receiving gpio0 state")
@@ -123,15 +134,19 @@ class ClientThread(threading.Thread):
                         gpio0Reply = reply.replace("[/gpio0/", "")
                         self.gpio0State = gpio0Reply.replace("]", "")
                         config.updateSwitch(self.moduleId, "relay1", self.gpio0State)
+                        self.event.set();
+                        logger.debug("Notify processing complete")
                     elif (reply.find("[/gpio2/") >= 0):
                         gpio2Reply = reply.replace("[/gpio2/", "")
                         self.gpio2State = gpio2Reply.replace("]", "")
                         config.updateSwitch(self.moduleId, "relay2", self.gpio2State)                        
+                        self.event.set();
+                        logger.debug("Notify processing complete")
                     else:
                         logger.error("Error changing state")
                 
                 # Dummy read
-                if (time.time() - start) > 10:
+                if (time.time() - start) > 5:
                     logger.info("Checking connection status !!!")
                     self.socket.send("[GET /moduleId]")
                     moduleIdReply = self.read();
@@ -150,10 +165,9 @@ class ClientThread(threading.Thread):
         #logger.info(config.getFormattedString())
 
 class Server(threading.Thread):
-    def __init__(self, host, port):
-        logger.info("Server object created")
+    def __init__(self, port):
+        logger.info("Device Server object created")
         threading.Thread.__init__(self)
-        self.host = host
         self.port = port
         self.threadDict = dict()
         self.idCounter = 1
@@ -161,11 +175,15 @@ class Server(threading.Thread):
         
     def setSwitchState(self, moduleId, switchId, status):
         self.dictLock.acquire();
+        thread_temp = None;
         for id, thread in self.threadDict.iteritems():
             if (thread.getModuleId() == moduleId):
-                thread.setSwitchState(switchId, status)
+                thread_temp = thread
                 break
         self.dictLock.release();
+        
+        if (thread_temp):
+            thread.setSwitchState(switchId, status)
 
     def removeThread(self, id):
         self.dictLock.acquire();
@@ -177,7 +195,7 @@ class Server(threading.Thread):
         logger.info("Starting server on port: " + str(self.port))
         tcpsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         tcpsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        tcpsock.bind((self.host, self.port))
+        tcpsock.bind(("0.0.0.0", self.port))
         tcpsock.listen(5)
         
         while True:

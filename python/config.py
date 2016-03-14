@@ -204,6 +204,10 @@ def updateSwitch(moduleId, switchId, status):
                 # Check if switch with switchId exists
                 for switch in module['switch']:
                     if switch['switch_id'] == switchId:
+                        if (status == "0"):
+                            status = "1"
+                        else:
+                            status = "0"
                         switch['status'] = status
                         switchFound = True
 

@@ -1,89 +1,77 @@
-from flask import Flask, jsonify, request, make_response, current_app
-from functools import update_wrapper
-from datetime import timedelta
+import web
+import json
+import threading
+import logger
 import config
 
-def crossdomain(origin=None, methods=None, headers=None,
-                max_age=21600, attach_to_all=True,
-                automatic_options=True):
-    if methods is not None:
-        methods = ', '.join(sorted(x.upper() for x in methods))
-    if headers is not None and not isinstance(headers, basestring):
-        headers = ', '.join(x.upper() for x in headers)
-    if not isinstance(origin, basestring):
-        origin = ', '.join(origin)
-    if isinstance(max_age, timedelta):
-        max_age = max_age.total_seconds()
+class API():
+    def GET(self, id=None):
+        if (len(id) == 0):
+            return web.notfound()
+        elif (id == 'config'):
+            web.header('Content-Type', 'application/json')
+            web.header('Access-Control-Allow-Origin', '*')
+            return json.dumps(config.getJson())
+        elif (id == 'module'):
+            web.header('Content-Type', 'application/json')
+            web.header('Access-Control-Allow-Origin', '*')
+            inputs = web.input(module_id='', action='read')
+            if (not inputs.module_id):
+                return json.dumps({"error":"module_id missing"})
+            return json.dumps(config.getModuleById(inputs.module_id))
+        elif (id == 'switch'):
+            web.header('Content-Type', 'application/json')
+            web.header('Access-Control-Allow-Origin', '*')
+            inputs = web.input(module_id='', switch_id='', action='read')
+            if (not inputs.module_id):
+                return json.dumps({"error":"module_id missing"})
+            if (not inputs.switch_id):
+                return json.dumps({"error":"switch_id missing"})     
+            return json.dumps(config.getSwitchById(inputs.module_id, inputs.switch_id))
+        return web.notfound()
 
-    def get_methods():
-        if methods is not None:
-            return methods
+    def POST(self, id=None):
+        if (id == 'switch'):
+            web.header('Content-Type', 'application/json')
+            web.header('Access-Control-Allow-Origin', '*')
+            inputs = web.input(module_id='', switch_id='', status='', action='read')
+            if (not inputs.module_id):
+                return json.dumps({"error":"module_id missing"})
+            if (not inputs.switch_id):
+                return json.dumps({"error":"switch_id missing"})     
+            if (not inputs.status):
+                return json.dumps({"error":"status missing"})
 
-        options_resp = current_app.make_default_options_response()
-        return options_resp.headers['allow']
+            APIServer.instance.setSwitchState(inputs.module_id, inputs.switch_id, inputs.status)
+            return json.dumps({"error":"success"})
 
-    def decorator(f):
-        def wrapped_function(*args, **kwargs):
-            if automatic_options and request.method == 'OPTIONS':
-                resp = current_app.make_default_options_response()
-            else:
-                resp = make_response(f(*args, **kwargs))
-            if not attach_to_all and request.method != 'OPTIONS':
-                return resp
+        return web.notfound()
 
-            h = resp.headers
+    def DELETE(self, id):
+        return web.notfound()
 
-            h['Access-Control-Allow-Origin'] = origin
-            h['Access-Control-Allow-Methods'] = get_methods()
-            h['Access-Control-Max-Age'] = str(max_age)
-            if headers is not None:
-                h['Access-Control-Allow-Headers'] = headers
-            return resp
+    def PUT(self, id):
+        return web.notfound()
 
-        f.provide_automatic_options = False
-        return update_wrapper(wrapped_function, f)
-    return decorator
+class WebApplication(web.application): 
+    def run(self, port=8080, *middleware): 
+        func = self.wsgifunc(*middleware) 
+        return web.httpserver.runsimple(func, ('0.0.0.0', port)) 
+              
+class APIServer(threading.Thread):
+    instance = None
+    def __init__(self, server, port):
+        logger.info("API Server object created")
+        threading.Thread.__init__(self)
+        self.port = port
+        APIServer.instance = server
 
-app = Flask(__name__)
-server = None
-
-@app.route('/config', methods=['GET'])
-@crossdomain(origin='*')
-def get_config():
-    return jsonify(config.getJson())
-
-@app.route('/module', methods=['GET'])
-@crossdomain(origin='*')
-def process_module():
-    module_id = request.args.get('module_id', '')
-    if (not module_id):
-        return jsonify({"error":"module_id missing"})
-    return jsonify(config.getModuleById(module_id))
-    
-@app.route('/switch', methods=['GET', 'POST'])
-@crossdomain(origin='*')
-def process_switch():
-
-    module_id = request.args.get('module_id', '')
-    switch_id = request.args.get('switch_id', '')
-    
-    if (not module_id):
-        return jsonify({"error":"module_id missing"})
-    if (not switch_id):
-        return jsonify({"error":"switch_id missing"})
-     
-    if request.method == 'GET':
-        return jsonify(config.getSwitchById(module_id, switch_id))
-
-    if request.method == 'POST':
-        status = request.args.get('status', '')
-        if (not status):
-            return jsonify({"error":"status missing"})
-
-        server.setSwitchState(module_id, switch_id, status)
-        return jsonify({"error":"success"})
+    def run(self):    
+        logger.info("Starting API server on port: " + str(self.port))
+        urls = ('/(.*)', 'API')
+        app = WebApplication(urls, globals())
+        app.run(port=self.port);
         
-    return jsonify({"error":"unknown request"})
+        #for t in threads:
+        #    t.join()
     
-def start():
-    app.run(host="0.0.0.0", port=int("9999"),use_reloader=False)

@@ -1,13 +1,22 @@
 var Config = null;
+var ConfigTimer = null;
 
 function SendCommand(module_id, switch_id, status) {
+    clearInterval(ConfigTimer);
+    ConfigTimer = null;
+    
+    $("body").append('<div class="modalWindow"/>');
+    $.mobile.loading("show");
+    
     var host = window.location.host;
     host = host.replace(":8080", "")
     var url = "http://" + host + ":9999/switch?module_id=" + module_id + "&switch_id=" + switch_id + "&status=" + status;
     //var dataToBeSent = '[{"status": "1"}]';
     $.post(url, function(data, textStatus) {
-        console.log(data);
-        console.log(textStatus);
+        //$.mobile.loading("hide");
+        //console.log(data);
+        //console.log(textStatus);
+        GetConfig();
         //console.log(module_id);
         //data contains the JSON object
         //textStatus contains the status: success, error, etc
@@ -84,7 +93,7 @@ function IsSwitchsEqual(newSwitches, oldSwitches) {
             var oldSwitchId = oldSwitches[j].switch_id;
             if (oldSwitchId == newSwitchId) {
                 switchFound = true;
-                if (oldSwitchId[j].status != newSwitchId[i].status) {
+                if (oldSwitches[j].status != newSwitches[i].status) {
                     return false;
                 }
                 break;
@@ -144,7 +153,6 @@ function ConfigReceived( data ) {
     //if (isEqual(Config, data.config)) {
     //    return;
     //}
-    $.mobile.loading("hide");
     
     var modules = data.config.modules.module;
     
@@ -159,6 +167,9 @@ function ConfigReceived( data ) {
         console.log("Config equal");
     }
     Config = data.config;
+    $(".modalWindow").remove();
+    //$.mobile.hidePageLoadingMsg();
+    $.mobile.loading("hide");
 }
 
 function ErrorReceivingConfig() {
@@ -166,18 +177,23 @@ function ErrorReceivingConfig() {
     Config = null;
 }
 
-$(document).ready(function() {
-
-    $.mobile.loading("show");
+function GetConfig() {
     var host = window.location.host;
     host = host.replace(":8080", "")
     $.getJSON( "http://" + host + ":9999/config", ConfigReceived).error(ErrorReceivingConfig);
+    
+    if (ConfigTimer == null) {
+        ConfigTimer = setInterval(GetConfig, 5000);
+    }
+}
 
-    setInterval(function() {
-        var host = window.location.host;
-        host = host.replace(":8080", "")
-        $.getJSON( "http://" + host + ":9999/config", ConfigReceived).error(ErrorReceivingConfig);
-    }, 5000);
+$(document).ready(function() {
+    $("body").append('<div class="modalWindow"/>');
+    $.mobile.loading("show");
+    //setTimeout('hideModal()', 2000);
+  
+    //$.mobile.loading("show");
+    GetConfig();
 
 
 /*
