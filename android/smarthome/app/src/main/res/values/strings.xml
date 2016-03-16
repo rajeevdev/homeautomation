@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Smart Home App</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="menu_settings">Settings</string>
+    <string name="title_main_activity">SimpleImageTextList</string>
+    <string name="image">Image thumbnail</string>
+</resources>
