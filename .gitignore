@@ -1,0 +1,4 @@
+/config
+/logging
+/python/*.pyc
+/python/*.lnk
