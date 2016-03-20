@@ -71,7 +71,7 @@ public class LoadingScreenActivity extends Activity
                     while(counter <= 4)
                     {
                         //Wait 850 milliseconds
-                        this.wait(850);
+                        this.wait(100);
                         //Increment the counter
                         counter++;
                         //Set the current progress.
@@ -104,7 +104,7 @@ public class LoadingScreenActivity extends Activity
             //initialize the View
 
             //define a new Intent for the second Activity
-            Intent intent = new Intent(LoadingScreenActivity.this, ImageTextListBaseAdapterActivity.class);
+            Intent intent = new Intent(LoadingScreenActivity.this, WebViewActivity.class);
             //start the second Activity
             startActivity(intent);
             LoadingScreenActivity.this.finish();

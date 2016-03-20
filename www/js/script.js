@@ -177,7 +177,7 @@ function ErrorReceivingConfig() {
 function GetConfig() {
     var host = window.location.host;
     host = host.replace(":8080", "")
-    $.getJSON( "http://" + host + ":9999/config", ConfigReceived).error(ErrorReceivingConfig);
+    $.getJSON( "http://homemonitor.esy.es/php/api.php?request=get_config&system_id=94a596f0-e83c-11e5-b8cb-5c260a2f8a10", ConfigReceived).error(ErrorReceivingConfig);
     
     if (ConfigTimer == null) {
         ConfigTimer = setInterval(GetConfig, 5000);
