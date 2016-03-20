@@ -208,6 +208,3 @@ class Server(threading.Thread):
             logger.info("Total connection:" + str(len(self.threadDict)) + "\n")
             self.dictLock.release()
             self.idCounter = self.idCounter + 1
-
-        #for t in threads:
-        #    t.join()

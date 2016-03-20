@@ -123,7 +123,7 @@ def getInstance():
         Config.instance = Config()
     return Config.instance
 
-def getJson():
+def getJSON():
     getInstance().lock.acquire()
     js = Config.instance.json
     Config.instance.lock.release()
@@ -248,3 +248,8 @@ def updateStatus():
         #except:
         #    print "Unexpected error: ", sys.exc_info()[0]
     
+def getSystemId():
+    getInstance().lock.acquire()
+    jsonObject = getInstance().json
+    getInstance().lock.release()
+    return jsonObject['config']['system_id']

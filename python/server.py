@@ -4,10 +4,11 @@ import logger
 import config
 import server_socket
 import api_server
+import set_config
 
 if __name__ == '__main__':
     logger.setupLogger();
-    logger.info("========== DEVICE SERVER STARTED ==========")
+    logger.info("========== SERVER STARTED ==========")
 
     # Dummy call to initialize the config object
     logger.info("Starting server with configuration:\n" + config.getFormattedString())
@@ -24,3 +25,6 @@ if __name__ == '__main__':
     #api_server.start()
     #api_server.start();
     logger.info("API server stopped")
+
+    status = set_config.SetStatus();
+    status.start();

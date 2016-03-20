@@ -11,7 +11,7 @@ class API():
         elif (id == 'config'):
             web.header('Content-Type', 'application/json')
             web.header('Access-Control-Allow-Origin', '*')
-            return json.dumps(config.getJson())
+            return json.dumps(config.getJSON())
         elif (id == 'module'):
             web.header('Content-Type', 'application/json')
             web.header('Access-Control-Allow-Origin', '*')
