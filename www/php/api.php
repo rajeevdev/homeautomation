@@ -26,7 +26,8 @@ class API extends REST
 			if (
 				$func == "register" ||
 				$func == "set_config" ||
-				$func == "set_command")
+				$func == "set_command" ||
+                $func == "refresh_config")
 			{
 				// Cross validation if the request method is POST else it will return "Not Acceptable" status
 				if($this->get_request_method() != "POST")
@@ -149,6 +150,56 @@ class API extends REST
         }
 	}
 	
+    private function refresh_config()
+    {
+        if(!isset($_REQUEST['system_id'])){
+            $error = array('status' => "failed", "msg" => "System ID missing in API");
+            $this->response($this->json($error), 406);        
+        }
+        
+		$system_id= $this->_request['system_id'];
+		
+		if(!empty($system_id))
+		{
+            $jsonString = file_get_contents("php://input");
+            
+            if (empty($jsonString))
+            {
+                $error = array('status' => "failed", "msg" => "Config missing in API");
+                $this->response($this->json($error), 406);
+                return;
+            }
+             
+			$conn = new mysqli(DB_SERVER, DB_USER, DB_PASSWORD, DB);
+			if ($conn->connect_error) {
+                $error = array('status' => "failed", "msg" => "Error opening database");
+                $this->response($this->json($error), 500);
+				return;
+			}
+
+            $jsonBase64 = base64_encode($jsonString);
+            #error_log($jsonBase64);
+			if ($conn->query("UPDATE ACCOUNT SET CONFIG = '$jsonBase64' WHERE SYSTEM_ID = '$system_id'")) {
+                $success = array('status' => "success", "msg" => "Config updated");
+                $this->response($this->json($success), 200);                
+            }
+            else {
+                $error = array('status' => "failed", "msg" => "Error updating config");
+                $this->response($this->json($error), 500);
+                return;                
+            }
+            
+			$conn->close();
+		}
+        else
+        {
+            // If invalid inputs "Bad Request" status message and reason
+            $error = array('status' => "failed", "msg" => "Invalid system ID in API");
+            $this->response($this->json($error), 406);
+        }
+        return;
+    }
+    
 	private function set_config()
 	{
         if(!isset($_REQUEST['system_id'])){
@@ -177,8 +228,11 @@ class API extends REST
 			}
 
             $jsonBase64 = base64_encode($jsonString);
-            error_log($jsonBase64);
-			if ($conn->query("UPDATE ACCOUNT SET CONFIG = '$jsonBase64' WHERE SYSTEM_ID = '$system_id'")) {
+            $timestamp = date('Y-m-d H:i:s');
+
+            #error_log($jsonBase64);
+			//if ($conn->query("UPDATE ACCOUNT SET CONFIG = '$jsonBase64' LAST_UPDATED = $timestamp WHERE SYSTEM_ID = '$system_id'")) {
+            if ($conn->query("UPDATE ACCOUNT SET CONFIG = '$jsonBase64' WHERE SYSTEM_ID = '$system_id'")) {
                 $success = array('status' => "success", "msg" => "Config updated");
                 $this->response($this->json($success), 200);                
             }
@@ -212,7 +266,7 @@ class API extends REST
 			}
 			
 			$jsonString = file_get_contents("php://input");
-			error_log($jsonString);
+			#error_log($jsonString);
 			$json_array = json_decode($jsonString, true);
 			foreach($json_array as $json){
 				$switch_id = $json['switch_id'];

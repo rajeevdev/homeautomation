@@ -61,9 +61,13 @@ function AddModule(module_id, module_status, switchList) {
         //console.log(switchObj.status);
         
         var sId = module_id + '_' + switchObj.switch_id;
-        //$("#" + module_id).append("<li data-icon='false'><a href='#'><img src='" + (switchObj.status == "1" ? "green.png" : "red.png") + "' class='ui-li-icon'>" + switchObj.switch_id + "</a></li>");
+        $("#" + mId).append("<li data-icon='false' id='" + sId + "'><a href='#'><img src='" + (switchObj.status == "1" ? "images/green.png" : "images/red.png") + "' class='ui-li-icon'>" + switchObj.switch_id + "</a></li>");
 
-        $("#" + mId).append("<li data-icon='false'><label>" + switchObj.switch_id + "</label><span class='ui-btn-right' style='margin-top:.25em;'><select id='" + sId + "' data-role='flipswitch'><option value='off'>off</option><option value='on'>on</option></select></span></li>");
+        if (module_status == "0") {
+            $("#" + sId).addClass("ui-state-disabled");
+        }
+        
+        /*$("#" + mId).append("<li data-icon='false'><label>" + switchObj.switch_id + "</label><span class='ui-btn-right' style='margin-top:.25em;'><select id='" + sId + "' data-role='flipswitch'><option value='off'>off</option><option value='on'>on</option></select></span></li>");
         $('#' + mId + ' #' + sId).flipswitch();
         if (module_status == "1") {
             if (switchObj.status == "1")
@@ -74,7 +78,7 @@ function AddModule(module_id, module_status, switchList) {
             $('#' + mId + ' #' + sId).on('change', SwitchClicked);
         } else {
             $('#' + mId + ' #' + sId).flipswitch('option', 'disabled', true);
-        }
+        }*/
     }
     
     $('#' + mId).listview().listview('refresh');
