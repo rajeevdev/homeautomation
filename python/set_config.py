@@ -13,14 +13,14 @@ class SetStatus(threading.Thread):
     def run(self):
         logger.info("Waiting for 10 seconds before starting SET CONFIG loop...")
         system_id = config.getSystemId()
-        print system_id
+        #print system_id
         time.sleep(10)
         
         while True:
             try:
                 logger.info("Updating status...")
                 jsonConfig = config.getJSON()
-                url = 'http://localhost/php/api.php?request=set_config&system_id=' + system_id
+                url = 'http://homemonitor.esy.es/php/api.php?request=set_config&system_id=' + system_id
                 resp = requests.post(url, json=jsonConfig)
                 if resp.status_code == 200:
                     logger.info("Config Successfully updated")
