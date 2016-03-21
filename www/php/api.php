@@ -26,8 +26,7 @@ class API extends REST
 			if (
 				$func == "register" ||
 				$func == "set_config" ||
-				$func == "set_command" ||
-                $func == "refresh_config")
+				$func == "set_command")
 			{
 				// Cross validation if the request method is POST else it will return "Not Acceptable" status
 				if($this->get_request_method() != "POST")
@@ -38,7 +37,8 @@ class API extends REST
 				}
 			}
 			if ($func == "get_config" ||
-				$func == "getSystemStatus" )
+				$func == "getSystemStatus" ||
+                $func == "refresh_config")
 			{
 				// Cross validation if the request method is GET else it will return "Not Acceptable" status
 				if($this->get_request_method() != "GET")
@@ -130,7 +130,9 @@ class API extends REST
 			if ($result->num_rows > 0) {
 				if ($row = $result->fetch_array(MYSQL_ASSOC)) {
 					$base64 = $row["CONFIG"];
+                    $connected = $row["CONNECTED"];
                     $jsonString = base64_decode($base64);
+                    header('Connected: '. $connected);
                     $this->response($jsonString, 200);
 				}
 			}
@@ -152,52 +154,35 @@ class API extends REST
 	
     private function refresh_config()
     {
-        if(!isset($_REQUEST['system_id'])){
-            $error = array('status' => "failed", "msg" => "System ID missing in API");
-            $this->response($this->json($error), 406);        
+        $conn = new mysqli(DB_SERVER, DB_USER, DB_PASSWORD, DB);
+        if ($conn->connect_error) {
+            $error = array('status' => "failed", "msg" => "Error opening database");
+            $this->response($this->json($error), 500);
+            return;
         }
-        
-		$system_id= $this->_request['system_id'];
-		
-		if(!empty($system_id))
-		{
-            $jsonString = file_get_contents("php://input");
-            
-            if (empty($jsonString))
-            {
-                $error = array('status' => "failed", "msg" => "Config missing in API");
-                $this->response($this->json($error), 406);
-                return;
-            }
-             
-			$conn = new mysqli(DB_SERVER, DB_USER, DB_PASSWORD, DB);
-			if ($conn->connect_error) {
-                $error = array('status' => "failed", "msg" => "Error opening database");
-                $this->response($this->json($error), 500);
-				return;
-			}
 
-            $jsonBase64 = base64_encode($jsonString);
-            #error_log($jsonBase64);
-			if ($conn->query("UPDATE ACCOUNT SET CONFIG = '$jsonBase64' WHERE SYSTEM_ID = '$system_id'")) {
-                $success = array('status' => "success", "msg" => "Config updated");
-                $this->response($this->json($success), 200);                
+        $currenttime = date('Y-m-d H:i:s');
+        $result = $conn->query("SELECT * FROM ACCOUNT");
+        if ($result->num_rows > 0) {
+            while ($row = $result->fetch_array(MYSQL_ASSOC)) {
+
+                $timestamp = $row["LAST_UPDATED"];
+                $system_id = $row["SYSTEM_ID"];
+                $connected = $row["CONNECTED"];
+                if ($connected == true)
+                {
+                    $time1 = new DateTime($timestamp);
+                    $time2 = new DateTime($currenttime);
+                    $interval =  $time2->getTimestamp() - $time1->getTimestamp();
+                    if ($interval > 30)
+                    {
+                        $conn->query("UPDATE ACCOUNT SET CONNECTED = FALSE WHERE SYSTEM_ID = '$system_id'");
+                    }
+                }
             }
-            else {
-                $error = array('status' => "failed", "msg" => "Error updating config");
-                $this->response($this->json($error), 500);
-                return;                
-            }
-            
-			$conn->close();
-		}
-        else
-        {
-            // If invalid inputs "Bad Request" status message and reason
-            $error = array('status' => "failed", "msg" => "Invalid system ID in API");
-            $this->response($this->json($error), 406);
         }
-        return;
+        $result->close();
+        $conn->close();        
     }
     
 	private function set_config()
@@ -230,14 +215,12 @@ class API extends REST
             $jsonBase64 = base64_encode($jsonString);
             $timestamp = date('Y-m-d H:i:s');
 
-            #error_log($jsonBase64);
-			//if ($conn->query("UPDATE ACCOUNT SET CONFIG = '$jsonBase64' LAST_UPDATED = $timestamp WHERE SYSTEM_ID = '$system_id'")) {
-            if ($conn->query("UPDATE ACCOUNT SET CONFIG = '$jsonBase64' WHERE SYSTEM_ID = '$system_id'")) {
+			if ($conn->query("UPDATE ACCOUNT SET CONFIG = '$jsonBase64', LAST_UPDATED = '$timestamp', CONNECTED = TRUE WHERE SYSTEM_ID = '$system_id'")) {
                 $success = array('status' => "success", "msg" => "Config updated");
-                $this->response($this->json($success), 200);                
+                $this->response($this->json($success), 200);
             }
             else {
-                $error = array('status' => "failed", "msg" => "Error updating config");
+                $error = array('status' => "failed", "msg" => $mysqli->error);
                 $this->response($this->json($error), 500);
                 return;                
             }
@@ -251,8 +234,8 @@ class API extends REST
             $this->response($this->json($error), 406);
         }
         return;
-	}	
-
+	}
+    
 	private function set_command()
 	{
 		$system_id= $this->_request['system_id'];
