@@ -147,28 +147,18 @@ function IsConfigEqual(newModules) {
 
 function ConfigReceived( data , res, xhr ) {
 
+    $(".modalWindow").remove();
+    $.mobile.loading("hide");
+    
     connected = xhr.getResponseHeader("Connected");
     if (connected == "0") {
         $("#resultArea").empty();
         $("#resultArea").append("<div id='alertdiv'>NOT CONNECTED</div>");
-        //var toppos=($(window).height()/2) - ($("#alertdiv").height()/2);
-        //var leftpos=($(window).width()/2) - ($("#alertdiv").width()/2);
-        //$("#alertdiv").css("top", toppos).css("left",leftpos);        
-    } else {
-        if ($("#resultArea div").length > 0)
-            $("#resultArea").empty();
+        Config = null;
+        return;
     }
-    
-    //console.log(jQuery.isEmptyObject(data.config.modules));
-    //console.log(filter(Config, data.config));
-    
-    //console.log(isEqual(Config, data.config));
-    //if (isEqual(Config, data.config)) {
-    //    return;
-    //}
-    
-    var modules = data.config.modules.module;
-    
+
+    var modules = data.config.modules.module;    
     if (IsConfigEqual(modules) == false) {
         console.log("Config not equal");
         $("#resultArea").empty();
@@ -180,9 +170,6 @@ function ConfigReceived( data , res, xhr ) {
         console.log("Config equal");
     }
     Config = data.config;
-    $(".modalWindow").remove();
-    //$.mobile.hidePageLoadingMsg();
-    $.mobile.loading("hide");
 }
 
 function ErrorReceivingConfig() {
