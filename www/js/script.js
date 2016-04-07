@@ -145,18 +145,20 @@ function IsConfigEqual(newModules) {
     return true;
 }
 
-function ConfigReceived( data ) {
+function ConfigReceived( data , res, xhr ) {
 
-    //console.log(jQuery.isEmptyObject(data.config.modules));
-    //console.log(filter(Config, data.config));
+    $(".modalWindow").remove();
+    $.mobile.loading("hide");
     
-    //console.log(isEqual(Config, data.config));
-    //if (isEqual(Config, data.config)) {
-    //    return;
-    //}
-    
-    var modules = data.config.modules.module;
-    
+    connected = xhr.getResponseHeader("Connected");
+    if (connected == "0") {
+        $("#resultArea").empty();
+        $("#resultArea").append("<div id='alertdiv'>NOT CONNECTED</div>");
+        Config = null;
+        return;
+    }
+
+    var modules = data.config.modules.module;    
     if (IsConfigEqual(modules) == false) {
         console.log("Config not equal");
         $("#resultArea").empty();
@@ -168,9 +170,6 @@ function ConfigReceived( data ) {
         console.log("Config equal");
     }
     Config = data.config;
-    $(".modalWindow").remove();
-    //$.mobile.hidePageLoadingMsg();
-    $.mobile.loading("hide");
 }
 
 function ErrorReceivingConfig() {
@@ -181,7 +180,9 @@ function ErrorReceivingConfig() {
 function GetConfig() {
     var host = window.location.host;
     host = host.replace(":8080", "")
-    $.getJSON( "http://homemonitor.esy.es/php/api.php?request=get_config&system_id=94a596f0-e83c-11e5-b8cb-5c260a2f8a10", ConfigReceived).error(ErrorReceivingConfig);
+    host = host.replace(":80", "")
+    host = host.replace(":9999", "")
+    $.getJSON( "http://" + host + "/php/api.php?request=get_config&system_id=94a596f0-e83c-11e5-b8cb-5c260a2f8a10", ConfigReceived).error(ErrorReceivingConfig);
     
     if (ConfigTimer == null) {
         ConfigTimer = setInterval(GetConfig, 5000);
