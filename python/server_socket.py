@@ -125,7 +125,7 @@ class ClientThread(threading.Thread):
                 gpioValue = reply.replace("]", "")
                 config.updateSwitch(self.moduleId, gpioName, gpioValue)
                 time.sleep(1)
-
+            config.updateModule(self.moduleId, "1");
             #logger.info(config.getFormattedString())
             start = time.time()
             
@@ -208,6 +208,7 @@ class Server(threading.Thread):
             logger.info("Listening for incoming connections...")
             (clientsock, (ip, port)) = tcpsock.accept()
             newthread = ClientThread(self, self.idCounter, ip, port, clientsock)
+            newthread.daemon = True
             newthread.start()
             self.dictLock.acquire()
             self.threadDict[self.idCounter] = newthread

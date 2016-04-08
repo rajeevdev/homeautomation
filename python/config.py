@@ -198,8 +198,6 @@ def updateSwitch(moduleId, switchId, status):
         for module in getInstance().json['config']['modules']['module']:
             if module['module_id'] == moduleId:
                 moduleFound = True
-                module['status'] = "1"
-                
                 switchFound = False
                 # Check if switch with switchId exists
                 for switch in module['switch']:
@@ -218,7 +216,7 @@ def updateSwitch(moduleId, switchId, status):
 
         # if not then create it
         if (not moduleFound):
-            getInstance().json['config']['modules']['module'].append({'module_id': moduleId, "status": "1", 'switch': []})
+            getInstance().json['config']['modules']['module'].append({'module_id': moduleId, "status": "0", 'switch': []})
             getInstance().json['config']['modules']['module'][-1]['switch'].append({'switch_id': switchId, 'status': status})            
     except:
         print("Error in updating config")
