@@ -11,6 +11,11 @@ import config
 # [GET /moduleId]
 # [/moduleId/48-2C-6A-1E-59-3D]
 #
+# [GET /pins]
+# [/pins/4,5,0,2,16,14,12,13]
+# or
+# [/pins/0,2]
+
 # [GET /gpio0]
 # [/gpio0/0]
 #
@@ -38,7 +43,9 @@ class ClientThread(threading.Thread):
         self.port = port
         self.socket = socket
         self.moduleId = ""
+        self.pins = []
         self.writeBuffer = ""
+        self.success = True
         self.event = None
         self.writeLock = threading.Lock()
         logger.info("Creating thread with ID '" + str(id) + "' for " + ip + ":" + str(port))
@@ -83,13 +90,12 @@ class ClientThread(threading.Thread):
         self.event = threading.Event()
         logger.debug("Appending new command in thread")
         self.writeLock.acquire();
-        if (switchId == "relay1"):
-            self.writeBuffer = "[SET /gpio0/" + status + "]"
-        elif (switchId == "relay2"):
-            self.writeBuffer = "[SET /gpio2/" + status + "]"
+        self.success = True
+        self.writeBuffer = "[SET /" + switchId + "/" + status + "]"
         self.writeLock.release();
         self.event.wait()
         logger.debug("Command processing complete")
+        return self.success
         
     def run(self):
         try:
@@ -101,22 +107,24 @@ class ClientThread(threading.Thread):
             self.moduleId = moduleIdReply.replace("]", "")
             self.moduleId = self.moduleId.replace(":", "-")
             time.sleep(1)
-            
-            logger.info("Receiving gpio0 state")
-            self.socket.send("[GET /gpio0]")
-            gpio0Reply = self.read();
-            gpio0Reply = gpio0Reply.replace("[/gpio0/", "")
-            self.gpio0State = gpio0Reply.replace("]", "")            
-            config.updateSwitch(self.moduleId, "relay1", self.gpio0State)
+
+            logger.info("Receiving pins")
+            self.socket.send("[GET /pins]")
+            pinsReply = self.read();
+            pinsReply = pinsReply.replace("[/pins/", "")
+            pinsReply = pinsReply.replace("]", "")
+            self.pins = [int(pin) for pin in pinsReply.split(",")]
             time.sleep(1)
-             
-            logger.info("Receiving gpio2 state")
-            self.socket.send("[GET /gpio2]")
-            gpio2Reply = self.read();
-            gpio2Reply = gpio2Reply.replace("[/gpio2/", "")
-            self.gpio2State = gpio2Reply.replace("]", "")
-            config.updateSwitch(self.moduleId, "relay2", self.gpio0State)
-            time.sleep(1)
+
+            for pin in self.pins:
+                gpioName = "gpio" + str(pin)
+                logger.info("Receiving " + gpioName + " state")
+                self.socket.send("[GET /" + gpioName + "]")
+                reply = self.read();
+                reply = reply.replace("[/" + gpioName + "/", "")
+                gpioValue = reply.replace("]", "")
+                config.updateSwitch(self.moduleId, gpioName, gpioValue)
+                time.sleep(1)
 
             #logger.info(config.getFormattedString())
             start = time.time()
@@ -130,20 +138,17 @@ class ClientThread(threading.Thread):
                     logger.debug("Sending command: " + currentCommand)
                     self.socket.send(currentCommand)
                     reply = self.read();
-                    if (reply.find("[/gpio0/") >= 0):
-                        gpio0Reply = reply.replace("[/gpio0/", "")
-                        self.gpio0State = gpio0Reply.replace("]", "")
-                        config.updateSwitch(self.moduleId, "relay1", self.gpio0State)
-                        self.event.set();
-                        logger.debug("Notify processing complete")
-                    elif (reply.find("[/gpio2/") >= 0):
-                        gpio2Reply = reply.replace("[/gpio2/", "")
-                        self.gpio2State = gpio2Reply.replace("]", "")
-                        config.updateSwitch(self.moduleId, "relay2", self.gpio2State)                        
-                        self.event.set();
-                        logger.debug("Notify processing complete")
+                    if (reply.find("[/gpio") >= 0):
+                        reply = reply.replace("[/", "")
+                        reply = reply.replace("]", "")
+                        gpioName = reply[:reply.index("/")]
+                        gpioValue = reply[reply.index("/") + 1:]
+                        config.updateSwitch(self.moduleId, gpioName, gpioValue)
                     else:
+                        self.success = False
                         logger.error("Error changing state")
+                    self.event.set();
+                    logger.debug("Notify processing complete")
                 
                 # Dummy read
                 if (time.time() - start) > 5:
@@ -183,7 +188,8 @@ class Server(threading.Thread):
         self.dictLock.release();
         
         if (thread_temp):
-            thread.setSwitchState(switchId, status)
+            return thread.setSwitchState(switchId, status)
+        return False
 
     def removeThread(self, id):
         self.dictLock.acquire();

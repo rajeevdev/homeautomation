@@ -42,8 +42,12 @@ class API():
             if (not inputs.status):
                 return json.dumps({"error":"status missing"})
 
-            APIServer.instance.setSwitchState(inputs.module_id, inputs.switch_id, inputs.status)
-            return json.dumps({"error":"success"})
+            success = APIServer.instance.setSwitchState(inputs.module_id, inputs.switch_id, inputs.status)
+            print success
+            if success:
+                return json.dumps({"error":"success"})
+            else:
+                return json.dumps({"error":"Error processing post command"})
 
         return web.notfound()
 
